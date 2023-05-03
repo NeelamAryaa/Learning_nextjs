@@ -59,6 +59,7 @@ export const getStaticProps = async () => {
         image: meetup.image,
       })),
     },
+    revalidate: 1,
   };
 };
 
