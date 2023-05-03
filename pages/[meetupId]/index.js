@@ -35,7 +35,9 @@ export const getStaticPaths = async () => {
   client.close();
 
   return {
-    fallback: false, //true - when some meetupId is mentioned here. and False when all are mentioned here
+    fallback: "blocking", //true - when some meetupId is mentioned here. and False when all are mentioned here
+    // blocking jb jbtk pg pura bn kr nhi aa jata user ko kuch nhi dikhega
+    // true me hme empty page dikhega pehle then data aayege or vo page dikhega.
     paths: meetups.map((meetup) => ({
       params: { meetupId: meetup._id.toString() },
     })),
