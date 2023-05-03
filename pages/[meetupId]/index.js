@@ -1,31 +1,57 @@
+import { MongoClient, ObjectId } from "mongodb";
+
 import MeetupDetail from "../../components/meetups/MeetupDetail";
-const MeetupDetails = () => {
+import Head from "next/head";
+const MeetupDetails = (props) => {
   return (
-    <MeetupDetail
-      image="https://picsum.photos/seed/picsum/200/300"
-      title="The First Meetup"
-      address="Some Address 5, Some City"
-      description="The Meetup Description"
-    />
+    <>
+      <Head>
+        <title>{props.meetupData.title}</title>
+        <meta name="description" content={props.meetupData.description}></meta>
+      </Head>
+
+      <MeetupDetail
+        image={props.meetupData.image}
+        title={props.meetupData.title}
+        address={props.meetupData.address}
+        description={props.meetupData.description}
+      />
+    </>
   );
 };
 
 // when url change to yaha se id le lega
 export const getStaticPaths = async () => {
+  const client = await MongoClient.connect(
+    "mongodb+srv://neelam:root@cluster0.f8mzsqu.mongodb.net/meetupdb?retryWrites=true&w=majority"
+  );
+
+  const db = client.db();
+
+  const meetupCollection = db.collection("meetups");
+
+  const meetups = await meetupCollection.find({}, { _id: 1 }).toArray();
+
+  client.close();
+
   return {
     fallback: false, //true - when some meetupId is mentioned here. and False when all are mentioned here
-    paths: [
-      {
-        params: {
-          meetupId: "m1",
-        },
-      },
-      {
-        params: {
-          meetupId: "m2",
-        },
-      },
-    ],
+    paths: meetups.map((meetup) => ({
+      params: { meetupId: meetup._id.toString() },
+    })),
+
+    // [
+    //   {
+    //     params: {
+    //       meetupId: "m1",
+    //     },
+    //   },
+    //   {
+    //     params: {
+    //       meetupId: "m2",
+    //     },
+    //   },
+    // ],
   };
 };
 
@@ -33,15 +59,30 @@ export const getStaticProps = async (context) => {
   // fetch data for single detail
 
   const meetupid = context.params.meetupId; //during build process
-  console.log(meetupid);
+
+  const client = await MongoClient.connect(
+    "mongodb+srv://neelam:root@cluster0.f8mzsqu.mongodb.net/meetupdb?retryWrites=true&w=majority"
+  );
+
+  const db = client.db();
+
+  const meetupCollection = db.collection("meetups");
+
+  const selectedMeetup = await meetupCollection.findOne({
+    _id: new ObjectId(meetupid),
+  });
+
+  client.close();
+
+  console.log(selectedMeetup);
   return {
     props: {
       meetupData: {
-        image: "https://picsum.photos/seed/picsum/200/300",
-        id: meetupid,
-        title: "The First Meetup",
-        address: "Some Address 5, Some City",
-        description: "The Meetup Description",
+        id: selectedMeetup._id.toString(),
+        image: selectedMeetup.image,
+        title: selectedMeetup.title,
+        address: selectedMeetup.address,
+        description: selectedMeetup.description,
       },
     },
   };
